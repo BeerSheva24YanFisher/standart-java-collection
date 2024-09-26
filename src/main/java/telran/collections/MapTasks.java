@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -69,46 +70,30 @@ public class MapTasks {
         return streamOfNumbers(array).collect(Collectors.groupingBy(n -> Integer.toString(n).length(), 
         Collectors.counting()));
     }
-
-    
     public static void displayDigitsDistribution() {
-        Random random = new Random();
-        int[] digitCounts = new int[10];
+        //1_000_000 random numbers from 0 to Integer.MAX_VALUE created
+        //Output should contain all digits (0 - 9) with counters of occurrences
+        //sorted by descending order of occurrences
+        //example:
+        //1 -> <counter of occurrences>
+        //2 -> <counter of occurrences>
+        // ..............
 
-        for (int i = 0; i < 1_000_000; i++) {
-            int number = random.nextInt(Integer.MAX_VALUE);
-            countDigits(number, digitCounts);
-        }
+        new Random().longs (1_000_000, 0, Integer.MAX_VALUE + 1l)
+        .flatMap(n -> Long.toString(n).chars().asLongStream()).boxed()
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+        .entrySet().stream().sorted(Entry.comparingByValue(Comparator.reverseOrder()))
+        .forEach(e -> System.out.printf("%c -> %d\n", e.getKey().intValue(), e.getValue()));
+       
 
-        Map<Integer, Integer> digitFrequencyMap = new HashMap<>();
-        for (int i = 0; i < digitCounts.length; i++) {
-            digitFrequencyMap.put(i, digitCounts[i]);
-        }
-
-        digitFrequencyMap.entrySet().stream()
-                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
-                .forEach(e -> System.out.printf("%d -> %d\n", e.getKey(), e.getValue()));
+        
     }
-
-    private static void countDigits(int number, int[] digitCounts) {
-        while (number > 0) {
-            int digit = number % 10;
-            digitCounts[digit]++;
-            number /= 10;
-        }
-    }
-
     public static ParenthesesMaps getParenthesesMaps(Character[][] openCloseParentheses) {
-        Map<Character, Character> openCloseMap = new HashMap<>();
-        Map<Character, Character> closeOpenMap = new HashMap<>();
-
-        for (Character[] pair : openCloseParentheses) {
-            char open = pair[0];
-            char close = pair[1];
-            openCloseMap.put(open, close);
-            closeOpenMap.put(close, open);
-        }
-
+        Map<Character, Character> openCloseMap = getMap(openCloseParentheses, ar -> ar[0], ar -> ar[1]);
+        Map<Character, Character> closeOpenMap = getMap(openCloseParentheses, ar -> ar[1], ar -> ar[0]);
         return new ParenthesesMaps(openCloseMap, closeOpenMap);
+    }
+    private static Map<Character, Character> getMap(Character[][] openCloseParentheses, Function<Character[],Character> keyFn, Function<Character[],Character> valueFn) {
+        return Arrays.stream(openCloseParentheses).collect(Collectors.toMap(keyFn, valueFn));
     }
 }
